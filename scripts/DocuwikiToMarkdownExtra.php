@@ -43,8 +43,8 @@ class DocuwikiToMarkdownExtra {
 		'/\[\[(.*)\]\]/U'			=>	array("call" => "handleLink"),
 
 		// Inline code.
-		'/\<code\>(.*)\<\/code\>/U'	=>	array("rewrite" => '`\1`'),
-		'/\<code (.*)\>(.*)\<\/code\>/U'	=>	array("rewrite" => '`\2`{\1}'),
+		'/\<code\>(.*)\<\/code\>/U'	=>	array("rewrite" => '```xml\n\1\n```\n'),
+		'/\<code (.*)\>(.*)\<\/code\>/U'	=>	array("rewrite" => '```\1\n\2\n```\n`'),
 
 		// Misc checks
 		'/^\d*\.\s/'				=>	array("notice" => "Possible numbered list item that is not docuwiki format, not handled"),
