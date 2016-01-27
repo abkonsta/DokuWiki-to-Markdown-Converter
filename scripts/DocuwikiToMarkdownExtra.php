@@ -217,8 +217,9 @@ class DocuwikiToMarkdownExtra {
 			$s = substr($s, 2); // remove leading space
 
 			// force exactly 2 spaces after bullet to make things line up nicely.
+// Mathias: Why?
 			if (substr($s, 1, 1) != " ") $s = "\n* " . substr($s, 1);
-			if (substr($s, 2, 1) != " ") $s = "\n*  " . substr($s, 2);
+			if (substr($s, 2, 1) != " ") $s = "\n* " . substr($s, 2);
 		}
 		else if (substr($s, 0, 3) == "  -") {
 			if ($this->listItemType != "ordered") $this->listItemCount = 1;
