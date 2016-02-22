@@ -20,9 +20,9 @@ $outputDir = (isset($args[2])) ? realpath($args[2]) : true;
 echo "Output Path " , $outputDir,  "\n";
 $template = (isset($args[3])) ? file_get_contents(realpath($args[3])) : false;
 
-require_once("DocuwikiToMarkdownExtra.php");
+require_once("DokuWikiToMarkdown.php");
 
-$converter = new DocuwikiToMarkdownExtra();
+$converter = new DokuWikiToMarkdown();
 
 $path = realpath($inputDir);
 
