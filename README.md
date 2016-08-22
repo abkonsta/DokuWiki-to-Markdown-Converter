@@ -13,6 +13,7 @@ Please note it has some specific Liquibase regular expressions in `scripts/Docuw
 	\\ should be replaced by 4 spaces and a line break
 	Links should be encapsulated by <>
 	bullets (like * or -) should have no spaces in front of them, and only one after
+	tables are formatted in Markdown Extra syntax. They should be encoded in HTML instead
 
 
 
