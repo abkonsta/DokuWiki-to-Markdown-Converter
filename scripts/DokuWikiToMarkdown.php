@@ -112,21 +112,27 @@ class DokuWikiToMarkdown {
 				$lineMode = "end_of_code";
 			}
 			else if ($lineMode == "text" && strlen($tl) > 0 &&
-				($tl[0] == "^" || $tl[0] == "|")) {
+				($tl[0] == "^")) {
 				// first char is a ^ so its the start of a table. In table mode we
 				// just accumulate table rows in $table, and render when
 				// we switch out of table mode so we can do column widths right.
-				$lineMode = "table";
+				$lineMode = "table_head";
+				$table = array();				
+			}			
+			else if ($lineMode == "table_head" && strlen($tl) > 0 &&
+				($tl[0] == "|")) {
+				// first char is a ^ so its the start of a table. In table mode we
+				// just accumulate table rows in $table, and render when
+				// we switch out of table mode so we can do column widths right.
+				$lineMode = "table_body";
 				$table = array();
+				
 			}
-			else if ($lineMode == "table" && ($tl == "" ||
+			else if ($lineMode == "table_body" && ($tl == "" ||
 				($tl[0] != "^" && $tl[0] != "|"))) {
+				$output .= "</table>\n";
 				$lineMode = "text";
-			}
-
-			if ($prevLineMode == "table" && $lineMode != "table") {
-				$output .= $this->renderTable($table);
-			}
+			} 
 
 			// perform mode-specific translations
 			switch ($lineMode) {
@@ -142,17 +148,59 @@ class DokuWikiToMarkdown {
 				case "code":
 				    $line = "        ".$line;
 					break;
-				case "table":
+				case "table_head":
+				
+				    $output .= "<table>\n  <tr>"; 
+				
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
-					$parts = explode($tl[0], $this->convertInlineMarkup($line));
-					for ($i=0; $i < count($parts); $i++)
-						$parts[$i] = trim($parts[$i]);
-					$table[] = $parts;
+					$parts = explode("^", $this->convertInlineMarkup($line));
+					for ($i=0; $i < count($parts); $i++) {
+					if (strlen(trim($parts[$i])) > 0) {
+						$parts[$i] = "<th>" . trim($parts[$i]) . "</th>";
+						
+						$output .= $parts[$i];
+						
+						}
+					}
+					
+					$output .= "</tr>\n";
+					
+					break;
+				case "table_body":		
+				
+				$output .= "  <tr>";														 
+				
+					// Grab this line, break it up and add it to $table after
+					// performing inline transforms on each cell.
+					$parts = explode("|", $this->convertInlineMarkup($line));
+					
+					for ($i=1; $i < (count($parts) - 1); $i++) {
+					   if ($parts[$i] != "") {
+					   
+					    $colspan = 1;
+					    $j = $i;
+					    while (($parts[$j + 1] == "") && ($j < (count($parts) - 2))) {
+					       $colspan++;
+					       $j++;
+					    }
+					    if ($colspan == 1) {
+					       $colspanatt = "";
+					    } else {
+					           $colspanatt = " colspan=\"" . $colspan . "\"";
+					       }					    
+					   
+					       $parts[$i] = "<td" . $colspanatt . ">" . trim($parts[$i]) . "</td>";						
+						   $output .= $parts[$i];
+						}
+			         }									
+					
+					$output .= "</tr>\n";
+										
 					break;
 			}
 
-			if ($lineMode != "table") $output .= $line . "\n";
+			if ($lineMode != "table_body" && $lineMode != "table_head") $output .= $line . "\n";
 		}
 		
 		$cleanup = new MarkdownCleanup();
@@ -165,8 +213,9 @@ class DokuWikiToMarkdown {
 	static $underline = "";
 
 	function renderTable($table) {
+	/*
 		// get a very big underline
-		if (!self::$underline) for ($i = 0; $i < 100; $i++) self::$underline .= "----------";
+		//if (!self::$underline) for ($i = 0; $i < 100; $i++) self::$underline .= "----------";
 
 		// Calculate maximum columns widths
 		$widths = array();
@@ -180,25 +229,25 @@ class DokuWikiToMarkdown {
 		$s = "";
 		$headingRow = true;
 		foreach ($table as $row) {
-			for ($i = 0; $i < count($row); $i++) {
-				if ($i > 0) $s .= " | ";
-				$s .= str_pad($row[$i], $widths[$i]);
+			for ($i = 0; $i < count($row); $i++) {								
+				$s .= $row[$i];
 			}
-			$s .= "\n";
+			$s .= "</tr>\n";
 
-			if ($headingRow) {
+			//if ($headingRow) {
 				// underlines of the length of the column headings
-				for ($i = 0; $i < count($row); $i++) {
-					if ($i > 0) $s .= " | ";
-					$s .= str_pad(substr(self::$underline, 0, strlen($row[$i])), $widths[$i]);
-				}
-				$s .= "\n";
-			}
+				//for ($i = 0; $i < count($row); $i++) {
+				//	if ($i > 0) $s .= " | ";
+				//	$s .= str_pad(substr(self::$underline, 0, strlen($row[$i])), $widths[$i]);
+				//}
+			//	$s .= "\n";
+			//}
 
 			$headingRow = false;
 		}
 
-		return $s;
+		return $s;*/
+		
 	}
 
 	// Perform inline translations.
@@ -235,7 +284,7 @@ class DokuWikiToMarkdown {
 			$s = substr($s, 2); // remove leading space
 
 			// force exactly 2 spaces after bullet to make things line up nicely.
-// Mathias: Why?
+            // Mathias: Why?
 			if (substr($s, 1, 1) != " ") $s = "\n* " . substr($s, 1);
 			if (substr($s, 2, 1) != " ") $s = "\n* " . substr($s, 2);
 		}
