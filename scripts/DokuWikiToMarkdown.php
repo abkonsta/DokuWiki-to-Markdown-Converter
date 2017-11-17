@@ -130,7 +130,7 @@ class DokuWikiToMarkdown {
 			}
 			else if ($lineMode == "table_body" && ($tl == "" ||
 				($tl[0] != "^" && $tl[0] != "|"))) {
-				$output .= "</table>\n";
+				//$output .= "</table>\n";
 				$lineMode = "text";
 			} 
 
@@ -141,61 +141,70 @@ class DokuWikiToMarkdown {
 			        $lineMode = "text";
 			        break;
 				case "text":
-				    $line = ltrim($line);
+					$line = ltrim($line);
 					$line = $this->convertInlineMarkup($line);
 					$line = $this->convertListItems($line);
 					break;
 				case "code":
-				    $line = "        ".$line;
+					$line = "        ".$line;
 					break;
 				case "table_head":
 				
-				    $output .= "<table>\n  <tr>"; 
+					// $output .= "<table>\n  <tr>"; 
 				
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
 					$parts = explode("^", $this->convertInlineMarkup($line));
+					$output .= "|";
 					for ($i=0; $i < count($parts); $i++) {
-					if (strlen(trim($parts[$i])) > 0) {
-						$parts[$i] = "<th>" . trim($parts[$i]) . "</th>";
-						
-						$output .= $parts[$i];
-						
+						if (strlen(trim($parts[$i])) > 0) {
+							// $parts[$i] = "<th>" . trim($parts[$i]) . "</th>";
+							$parts[$i] = "   " . trim($parts[$i]) . "   |";
+							$output .= $parts[$i];
 						}
 					}
-					
-					$output .= "</tr>\n";
+					$output .= "\n";
+
+					$output .= "|";
+					for ($i=0; $i < count($parts); $i++) {
+						if (strlen(trim($parts[$i])) > 0) {
+							$output .= " " . str_repeat("-", strlen(trim($parts[$i]))) . " |";
+						}
+					}
+					$output .= "\n";					
+					// $output .= "</tr>\n";
 					
 					break;
 				case "table_body":		
 				
-				$output .= "  <tr>";														 
+					// $output .= "  <tr>";														 
+					$output .= "|";
 				
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
 					$parts = explode("|", $this->convertInlineMarkup($line));
 					
 					for ($i=1; $i < (count($parts) - 1); $i++) {
-					   if ($parts[$i] != "") {
-					   
-					    $colspan = 1;
-					    $j = $i;
-					    while (($parts[$j + 1] == "") && ($j < (count($parts) - 2))) {
-					       $colspan++;
-					       $j++;
-					    }
-					    if ($colspan == 1) {
-					       $colspanatt = "";
-					    } else {
-					           $colspanatt = " colspan=\"" . $colspan . "\"";
-					       }					    
-					   
-					       $parts[$i] = "<td" . $colspanatt . ">" . trim($parts[$i]) . "</td>";						
-						   $output .= $parts[$i];
+						if ($parts[$i] != "") {
+							$colspan = 1;
+							$j = $i;
+							while (($parts[$j + 1] == "") && ($j < (count($parts) - 2))) {
+								$colspan++;
+								$j++;
+							}
+							if ($colspan == 1) {
+								$colspanatt = "";
+							} else {
+								$colspanatt = " colspan=\"" . $colspan . "\"";
+							}					    
+
+							// $parts[$i] = "<td" . $colspanatt . ">" . trim($parts[$i]) . "</td>";
+							$parts[$i] = " " . trim($parts[$i]) . " |";
+							$output .= $parts[$i];
 						}
-			         }									
-					
-					$output .= "</tr>\n";
+			        }
+					$output .= "\n";
+					//$output .= "</tr>\n";
 										
 					break;
 			}
