@@ -96,7 +96,7 @@ class DokuWikiToMarkdown {
 			$tl = trim($line);
 			if ($lineMode != "code" && preg_match('/(.+<\/code>){2,}/', $tl)) {
 			    $lineParts = preg_split('/\<code(|\s([a-zA-Z0-9])*)\>|<\/code>/',$line);
-			    $line = implode('``',$lineParts);			    
+			    $line = implode('``',$lineParts);
 			}
 			else if ($lineMode != "code" && preg_match('/\<code(|\s([a-zA-Z0-9])*)\>/U', $tl) && preg_match('/<\/code>/', $tl)) {
 			    $line = rtrim($line);
@@ -106,7 +106,7 @@ class DokuWikiToMarkdown {
 			}
 			else if ($lineMode != "code" && preg_match('/\<code(|\s([a-zA-Z0-9])*)\>/U', $tl)) {
 			    $output .= ltrim(substr($line,0,strpos($line, "<"))) . "\n";
-				$line = "\n        ".substr($line,strpos($line, ">") + 1);				
+				$line = "\n        ".substr($line,strpos($line, ">") + 1);
 				$lineMode = "code";
 			}
 			else if ($lineMode == "code" && preg_match('/<\/code>/', $tl)) {
@@ -120,8 +120,8 @@ class DokuWikiToMarkdown {
 				// just accumulate table rows in $table, and render when
 				// we switch out of table mode so we can do column widths right.
 				$lineMode = "table_head";
-				$table = array();				
-			}			
+				$table = array();
+			}
 			else if ($lineMode == "table_head" && strlen($tl) > 0 &&
 				($tl[0] == "|")) {
 				// first char is a ^ so its the start of a table. In table mode we
@@ -129,7 +129,7 @@ class DokuWikiToMarkdown {
 				// we switch out of table mode so we can do column widths right.
 				$lineMode = "table_body";
 				$table = array();
-				
+
 			}
 			else if ($lineMode == "table_body" && ($tl == "" ||
 				($tl[0] != "^" && $tl[0] != "|"))) {
@@ -152,19 +152,29 @@ class DokuWikiToMarkdown {
 					$line = "        ".$line;
 					break;
 				case "table_head":
-				
+
 					// $output .= "<table>\n  <tr>"; 
-				
+
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
 					$parts = explode("^", $this->convertInlineMarkup($line));
+
+					// Remove 1st and last element from $parts, as they are
+					// always empty.
+					// Remove last element:
+					array_pop($parts);
+					// Remove 1st element - like this, as it's faster.
+					$parts = array_reverse($parts); array_pop($parts); $parts = array_reverse($parts);
+
 					$output .= "|";
 					for ($i=0; $i < count($parts); $i++) {
-						if (strlen(trim($parts[$i])) > 0) {
+						// if (strlen(trim($parts[$i])) > 0) {
 							// $parts[$i] = "<th>" . trim($parts[$i]) . "</th>";
 							$parts[$i] = "   " . trim($parts[$i]) . "   |";
 							$output .= $parts[$i];
-						}
+						// } else {
+						// 	echo "0\n";
+						// }
 					}
 					$output .= "\n";
 
@@ -174,19 +184,19 @@ class DokuWikiToMarkdown {
 							$output .= " " . str_repeat("-", strlen(trim($parts[$i]))) . " |";
 						}
 					}
-					$output .= "\n";					
+					$output .= "\n";
 					// $output .= "</tr>\n";
-					
+
 					break;
-				case "table_body":		
-				
-					// $output .= "  <tr>";														 
+				case "table_body":
+
+					// $output .= "  <tr>";
 					$output .= "|";
-				
+
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
 					$parts = explode("|", $this->convertInlineMarkup($line));
-					
+
 					for ($i=1; $i < (count($parts) - 1); $i++) {
 						if ($parts[$i] != "") {
 							$colspan = 1;
@@ -199,7 +209,7 @@ class DokuWikiToMarkdown {
 								$colspanatt = "";
 							} else {
 								$colspanatt = " colspan=\"" . $colspan . "\"";
-							}					    
+							}
 
 							// $parts[$i] = "<td" . $colspanatt . ">" . trim($parts[$i]) . "</td>";
 							$parts[$i] = " " . trim($parts[$i]) . " |";
@@ -208,13 +218,13 @@ class DokuWikiToMarkdown {
 			        }
 					$output .= "\n";
 					//$output .= "</tr>\n";
-										
+
 					break;
 			}
 
 			if ($lineMode != "table_body" && $lineMode != "table_head") $output .= $line . "\n";
 		}
-		
+
 		$cleanup = new MarkdownCleanup();
 		
 		$output = $cleanup->process($output);

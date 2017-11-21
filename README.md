@@ -14,6 +14,7 @@ Please note it has some specific Liquibase regular expressions in `scripts/Docuw
     Links should be encapsulated by <>
     bullets (like * or -) should have no spaces in front of them, and only one after
     rowspans (:::) in tables are not supported
+    colspans aren't supported either, due to limitations in Markdown syntax - instead, empty cells will be inserted
 
 ## Convert single files
 
