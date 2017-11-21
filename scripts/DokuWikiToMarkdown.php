@@ -4,7 +4,7 @@ require_once('MarkdownCleanup.php');
 class DokuWikiToMarkdown {
     // Changed file name from DocuwikiToMarkdownExtra.php to DokuWikiToMarkdown.php to reflect that this code converts to original Markdown syntax now instead of Markdown Extra. (MdlI 2016)
 	/**
-	 * Convert docuwiki syntax to markdown
+	 * Convert DokuWiki syntax to markdown
 	 *
 	 * Author: Mark Stephens
 	 * License: BSD
@@ -43,18 +43,21 @@ class DokuWikiToMarkdown {
 		'/\[\[.*?\>.*?\]\]/U'		=>	array("notice" => "interwiki syntax seen, not handled properly"),
 		'/\[\[(.*)\]\]/U'			=>	array("call" => "handleLink"),
 
+		// Images
+		'/\{\{.*?\}\}/U'			=>	array("call" => "handleImage"),
+
 		// Inline code.
-		'/\'\'(.+)\'\'/U'	=>	array("rewrite" => '``\1``'),
+		'/\'\'(.+)\'\'/U'			=>	array("rewrite" => '``\1``'),
 
 		// Misc checks
 		'/^\d*\.\s/'				=>	array("notice" => "Possible numbered list item that is not docuwiki format, not handled"),
-		'/^=+\s*.*$/'				=>	array("notice" => "Line starts with an =. Possibly an untranslated heading. Check for = in the heading text"),	
+		'/^=+\s*.*$/'				=>	array("notice" => "Line starts with an =. Possibly an untranslated heading. Check for = in the heading text"),
 		// <x@y.xom>						email
-            
+
                 // extra rules for liquibase wiki
                 // remove liquibase.org
                 //'/]\(http:\/\/liquibase\.org\/([^\)]*)\)/'	=>	array("rewrite" => '](\1)'),
-            
+
                 // add .html and site template variables
                 //'/]\(([^\)]*)\)/'				=>	array("rewrite" => ']({{ site.url }}/{{ page.lang }}/\1.html)')
 	);
@@ -366,14 +369,16 @@ class DokuWikiToMarkdown {
 	// - {{tutorial:file.png}}
 	function handleImage($line, $matchArgs) {
 		foreach ($matchArgs[0] as $match) {
-			$link == substr($match, 2, -2);
+			$link = substr($match, 2, -2);
 			$parts = explode("|", $link);
 
-			if (count($parts) == 1) $replacement = "![" . $parts[0] . "](" . $this->translateInternalLink($parts[0]) . ")";
-			else $replacement = "![" . $parts[1] . "](" . $this->translateInternalLink($parts[0]) . ")";
+			if (count($parts) == 1) $replacement = "![" . (($parts[0] == "")?($this->translateInternalLink($parts[0])):($parts[0])) . "](" . $this->translateInternalLink($parts[0]) . " \"" . (($parts[0] == "")?($this->translateInternalLink($parts[0])):($parts[0])) . "\")";
+			else $replacement = "![" . (($parts[1] == "")?($this->translateInternalLink($parts[0])):($parts[1])) . "](" . $this->translateInternalLink($parts[0]) . " \"" . (($parts[1] == "")?($this->translateInternalLink($parts[0])):($parts[1])) . "\")";
 
 			$line = str_replace($match, $replacement, $line);
 		}
+
+		return $line;
 	}
 
 	// Convert an internal docuwiki link, which is basically some combination
