@@ -144,7 +144,7 @@ class DokuWikiToMarkdown {
 			        $lineMode = "text";
 			        break;
 				case "text":
-					$line = ltrim($line);
+					// $line = ltrim($line);
 					$line = $this->convertInlineMarkup($line);
 					$line = $this->convertListItems($line);
 					break;
