@@ -135,7 +135,7 @@ class DokuWikiToMarkdown {
 				($tl[0] != "^" && $tl[0] != "|"))) {
 				//$output .= "</table>\n";
 				$lineMode = "text";
-			} 
+			}
 
 			// perform mode-specific translations
 			switch ($lineMode) {
@@ -153,7 +153,7 @@ class DokuWikiToMarkdown {
 					break;
 				case "table_head":
 
-					// $output .= "<table>\n  <tr>"; 
+					// $output .= "<table>\n  <tr>";
 
 					// Grab this line, break it up and add it to $table after
 					// performing inline transforms on each cell.
@@ -226,7 +226,7 @@ class DokuWikiToMarkdown {
 		}
 
 		$cleanup = new MarkdownCleanup();
-		
+
 		$output = $cleanup->process($output);
 
 		return $output;
@@ -251,7 +251,7 @@ class DokuWikiToMarkdown {
 		$s = "";
 		$headingRow = true;
 		foreach ($table as $row) {
-			for ($i = 0; $i < count($row); $i++) {								
+			for ($i = 0; $i < count($row); $i++) {
 				$s .= $row[$i];
 			}
 			$s .= "</tr>\n";
@@ -269,7 +269,7 @@ class DokuWikiToMarkdown {
 		}
 
 		return $s;*/
-		
+
 	}
 
 	// Perform inline translations.
@@ -423,8 +423,8 @@ class DokuWikiToMarkdown {
 		if($outputFile) {
 			if (file_put_contents($outputFile, $s, $flags) === FALSE)
 				echo "Could not write file {$outputFile}\n";
-		} 
-		
+		}
+
 		return $s;
 	}
 }
