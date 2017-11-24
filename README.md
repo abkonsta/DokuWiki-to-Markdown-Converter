@@ -60,4 +60,5 @@ and was edited to add some extra functionality by [ludoza](https://github.com/lu
 aim of creating a common way to export dokuwiki files to markdown (which is what we need in our 2013 restructuring here
 at title.dk).
 - [Alexander Skwar](https://github.com/alexs77) forked it from [Martin de la Iglesia's fork](https://github.com/Martin-de-la-Iglesia/DokuWiki-to-Markdown-Converter)
-and added support for image links in 2017.
+and added support for image links in 2017. Indented code blocks are now
+working again as well.
