@@ -92,26 +92,30 @@ class DokuWikiToMarkdown {
 			$prevLineMode = $lineMode;
 
 			// Determine if the line mode is changing
-			// Please note: this converts DokuWiki code to original Markdown code block syntax (4 space indentation), not Markdown Extra. (MdlI 2016)
+			// Please note: this converts DokuWiki code to Markdown fences ``` code block syntax (4 space indentation), not Markdown Extra. (MdlI 2016)
 			$tl = trim($line);
 			if ($lineMode != "code" && preg_match('/(.+<\/code>){2,}/', $tl)) {
-			    $lineParts = preg_split('/\<code(|\s([a-zA-Z0-9])*)\>|<\/code>/',$line);
+			    $lineParts = preg_split('/\<(code|file)(|\s([a-zA-Z0-9])*)\>|<\/(code|file)>/',$line);
 			    $line = implode('``',$lineParts);
 			}
-			else if ($lineMode != "code" && preg_match('/\<code(|\s([a-zA-Z0-9])*)\>/U', $tl) && preg_match('/<\/code>/', $tl)) {
+			else if ($lineMode != "code" && preg_match('/\<(code|file)(|\s([a-zA-Z0-9])*)\>/U', $tl, $matches) && preg_match('/<\/(code|file)>/', $tl)) {
 			    $line = rtrim($line);
-			    $output .= ltrim(substr($line,0,strpos($line, "<"))) . "\n";
-			    $line = "\n        ".substr(substr($line,strpos($line, ">") + 1),0,strpos($line, "<\/code>") - 7);
+			    $output .= ltrim(substr($line,0,strpos($line, "<")));
+			    $line .= (isset($matches[2])) ? "``` " . $matches[2] : "```";
+			    $line = "\n".substr(substr($line,strpos($line, ">") + 1),0,(strpos($line, "<\/code>")||strpos($line, "<\/file>")) - 7);
+			    $line .= "\n```";
 			    $lineMode = "end_of_code";
 			}
-			else if ($lineMode != "code" && preg_match('/\<code(|\s([a-zA-Z0-9])*)\>/U', $tl)) {
-			    $output .= ltrim(substr($line,0,strpos($line, "<"))) . "\n";
-				$line = "\n        ".substr($line,strpos($line, ">") + 1);
+			else if ($lineMode != "code" && preg_match('/\<(code|file)(|\s([a-zA-Z0-9])*)\>/U', $tl, $matches)) {
+			    $output .= ltrim(substr($line,0,strpos($line, "<")));
+				$line = substr($line,strpos($line, ">") + 1);
+				$line .= (isset($matches[2])) ? "```" . $matches[2] : "```";
 				$lineMode = "code";
 			}
-			else if ($lineMode == "code" && preg_match('/<\/code>/', $tl)) {
+			else if ($lineMode == "code" && preg_match('/<\/(code|file)>/', $tl)) {
 			    $line = rtrim($line);
-				$line = substr($line,0,strpos($line, "<\/code>") - 7);
+				$line = substr($line,0,(strpos($line, "<\/code>")||strpos($line, "<\/file>")) - 7);
+				$line = "```";
 				$lineMode = "end_of_code";
 			}
 			else if ($lineMode == "text" && strlen($tl) > 0 &&
@@ -140,7 +144,7 @@ class DokuWikiToMarkdown {
 			// perform mode-specific translations
 			switch ($lineMode) {
 			    case "end_of_code":
-			        $line = "        ".$line."\n";
+			        //$line = "        ".$line."\n";
 			        $lineMode = "text";
 			        break;
 				case "text":
@@ -149,7 +153,7 @@ class DokuWikiToMarkdown {
 					$line = $this->convertListItems($line);
 					break;
 				case "code":
-					$line = "        ".$line;
+					//$line = "        ".$line;
 					break;
 				case "table_head":
 

@@ -248,19 +248,19 @@ class MarkdownCleanup {
 					$linemode = 'code';
 
 					// add code formatting bit
-					$lines[$i] = (isset($matches[2])) ? ":::" . $matches[2] : '';
+					$lines[$i] = (isset($matches[2])) ? "``` " . $matches[2] : '';
 					
 					// if previous line is not empty, add a newline
 					$extraPreNewline = (isset($lines[$i-1]) && !empty($lines[$i-1]));
 				} else {
 					// last line of code block
 					$linemode = 'text';
-					$lines[$i] = ''; // remove line with closing tildes
+					$lines[$i] = '```'; // replace line with closing tildes
 				}
 			} 
 			
 			// HACK Add tabs if starts with ':::' (shouldnt be necessary)
-			if($linemode == 'code' || preg_match('/^\n?:::/msi', $lines[$i])) $lines[$i] = "\t" . $lines[$i];
+			//if($linemode == 'code' || preg_match('/^\n?:::/msi', $lines[$i])) $lines[$i] = "\t" . $lines[$i];
 			
 			if($extraPreNewline) $lines[$i] = "\n" . $lines[$i];
 			$extraPreNewline = false;
