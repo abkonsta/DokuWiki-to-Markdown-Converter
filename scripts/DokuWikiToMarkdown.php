@@ -22,6 +22,9 @@ class DokuWikiToMarkdown {
 
 	// These rules are applied whereever inline styling is permitted
 	static $inlineRules = array(
+		// there are more https://www.dokuwiki.org/wiki:syntax
+		'/:!:/'				=>	array("rewrite" => ':warning:'),
+
 		// Headings
 		'/^= (.*) =$/'				=>	array("rewrite" => '###### \1'),
 		'/^=([^=]*)=*$/'			=>	array("rewrite" => '###### \1'),
