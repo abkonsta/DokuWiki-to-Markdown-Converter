@@ -43,8 +43,9 @@ class DokuWikiToMarkdown {
 		'/\[\[.*?\>.*?\]\]/U'		=>	array("notice" => "interwiki syntax seen, not handled properly"),
 		'/\[\[(.*)\]\]/U'			=>	array("call" => "handleLink"),
 
+		'/\{\{(.*)\}\}/U'			=>	array("call" => "handleLink"),
 		// Images
-		'/\{\{.*?\}\}/U'			=>	array("call" => "handleImage"),
+		'/\{\{[^|]*?\}\}/U'			=>	array("call" => "handleImage"),
 
 		// Inline code.
 		'/\'\'(.+)\'\'/U'			=>	array("rewrite" => '``\1``'),
@@ -366,7 +367,12 @@ class DokuWikiToMarkdown {
 			if (count($parts) == 1) $replacement = "[" . $parts[0] . "](" . $this->translateInternalLink($parts[0]) . ")";
 			else {
 				if (strpos($parts[1], "{{")) $this->notice("Image inside link not translated, requires manual editing");
-				$replacement = "[" . $parts[1] . "](" . $this->translateInternalLink($parts[0]) . ")";
+				if ($parts[1] == '')
+					$replacement = "[" . $parts[0] . "](/media" . $this->translateInternalLink($parts[0]) . ")";
+					// not working with relative link
+					//$replacement = "</media" . $this->translateInternalLink($parts[0]) . ">";
+				else
+					$replacement = "[" . $parts[1] . "](" . $this->translateInternalLink($parts[0]) . ")";
 			}
 
 			$line = str_replace($match, $replacement, $line);
