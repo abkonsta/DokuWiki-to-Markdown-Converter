@@ -17,7 +17,8 @@ $inputDir = (isset($args[1])) ? realpath($args[1]) : "../input/";
 //Thus I just changed the default to true, so they'll alway be placed there anyway
 $outputDir = (isset($args[2])) ? realpath($args[2]) : true;
 
-echo "Output Path " , $outputDir,  "\n";
+echo $args[1], "\n";
+//echo "Output Path " , $outputDir,  "\n";
 $template = (isset($args[3])) ? file_get_contents(realpath($args[3])) : false;
 
 require_once("DokuWikiToMarkdown.php");
