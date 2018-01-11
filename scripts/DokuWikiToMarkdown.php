@@ -116,6 +116,13 @@ class DokuWikiToMarkdown {
 				$line .= (isset($matches[2])) ? "```" . $matches[2] : "```";
 				$lineMode = "code";
 			}
+			else if ($lineMode != "code" && preg_match('/\<(code|file)(\s([^|>]+)*\|([^>]+))\>/U', $tl, $matches)) {
+				$output .= ltrim(substr($line,0,strpos($line, "<")));
+				$output .= "[comment]: # (" . $matches[4] . ")\n";
+				$line = substr($line,strpos($line, ">") + 1);
+				$line .= (isset($matches[3])) ? "```" . $matches[3] : "```";
+				$lineMode = "code";
+			}
 			else if ($lineMode == "code" && preg_match('/<\/(code|file)>/', $tl)) {
 			    $line = rtrim($line);
 				$line = substr($line,0,(strpos($line, "<\/code>")||strpos($line, "<\/file>")) - 7);
@@ -409,6 +416,13 @@ class DokuWikiToMarkdown {
 	// folders. The input is any link. This only alters internal links.
 	function translateInternalLink($s) {
 		if (substr($s, 0, 5) == "http:" || substr($s, 0, 6) == "https") return $s;
+		if (strpos($s, ':') !== false) {
+			$s = strtolower($s);
+			$s = str_replace("(", "", $s);
+			$s = str_replace(")", "", $s);
+			$s = str_replace(",", "", $s);
+			$s = strtr($s, " ", "_");
+		}
 		return str_replace(":", "/", $s);
 	}
 
