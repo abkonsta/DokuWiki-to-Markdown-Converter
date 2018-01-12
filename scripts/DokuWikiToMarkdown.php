@@ -46,7 +46,7 @@ class DokuWikiToMarkdown {
 		'/\[\[.*?\>.*?\]\]/U'		=>	array("notice" => "interwiki syntax seen, not handled properly"),
 		'/\[\[(.*)\]\]/U'			=>	array("call" => "handleLink"),
 
-		'/\{\{(.*)\}\}/U'			=>	array("call" => "handleLink"),
+		'/\{\{(.*)\}\}/U'			=>	array("call" => "handleLinkMedia"),
 		// Images
 		'/\{\{[^|]*?\}\}/U'			=>	array("call" => "handleImage"),
 
@@ -369,26 +369,39 @@ class DokuWikiToMarkdown {
 	// - [[#documentation|documentation]]
 	// - [[community run third party websites]]
 	// - [[requirements#including_inside_template_files|Includes in Templates]]
-	function handleLink($line, $matchArgs) {
+	function handleLinkBase($line, $matchArgs, $media=false) {
 		foreach ($matchArgs[0] as $match) {
 			$link = substr($match, 2, -2);
 			$parts = explode("|", $link);
 
-			if (count($parts) == 1) $replacement = "[" . $parts[0] . "](" . $this->translateInternalLink($parts[0]) . ")";
+			if ($media)
+				$media = "/media";
+			else
+				$media = "";
+			if (count($parts) == 1) $replacement = "[" . $parts[0] . "](" .$media. $this->translateInternalLink($parts[0]) . ")";
 			else {
 				if (strpos($parts[1], "{{")) $this->notice("Image inside link not translated, requires manual editing");
 				if ($parts[1] == '')
+					// {{media}}
 					$replacement = "[" . $parts[0] . "](/media" . $this->translateInternalLink($parts[0]) . ")";
 					// not working with relative link
 					//$replacement = "</media" . $this->translateInternalLink($parts[0]) . ">";
 				else
-					$replacement = "[" . $parts[1] . "](" . $this->translateInternalLink($parts[0]) . ")";
+					$replacement = "[" . $parts[1] . "](" .$media. $this->translateInternalLink($parts[0]) . ")";
 			}
 
 			$line = str_replace($match, $replacement, $line);
 		}
 
 		return $line;
+	}
+	// {{media|label}}
+	function handleLinkMedia($line, $matchArgs, $media=false) {
+		return $this->handleLinkBase($line, $matchArgs, true);
+	}
+	// {{media|label}}
+	function handleLink($line, $matchArgs, $media=false) {
+		return $this->handleLinkBase($line, $matchArgs, false);
 	}
 
 	// Called by rules that match image references with {{ }}
