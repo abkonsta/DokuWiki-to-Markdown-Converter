@@ -1,6 +1,21 @@
 <?php
 require_once('MarkdownCleanup.php');
 
+// global array cleaning function
+function test_null_or_empty($var)
+{
+	if($var == null)
+		return false;
+
+	if(!isset($var))
+		return false;
+
+	if(empty(trim($var)))
+		return false;
+
+	return true;
+}
+
 class DokuWikiToMarkdown {
     // Changed file name from DocuwikiToMarkdownExtra.php to DokuWikiToMarkdown.php to reflect that this code converts to original Markdown syntax now instead of Markdown Extra. (MdlI 2016)
 	/**
@@ -45,10 +60,13 @@ class DokuWikiToMarkdown {
 		'/\[\[.*?\#.*?\|.*?\]\]/U'	=>	array("notice" => "Link with segment seen, not handled properly"),
 		'/\[\[.*?\>.*?\]\]/U'		=>	array("notice" => "interwiki syntax seen, not handled properly"),
 		'/\[\[(.*)\]\]/U'			=>	array("call" => "handleLink"),
-
-		'/\{\{(.*)\}\}/U'			=>	array("call" => "handleLinkMedia"),
+		
 		// Images
-		'/\{\{[^|]*?\}\}/U'			=>	array("call" => "handleImage"),
+		// '/\{\{[^|]*?\}\}/U'	=>	array("call" => "handleImage"),
+		'/\{\{\s?\:?(.+)\}\}/i'	=>	array("call" => "handleLinksAndImages"),
+
+		// the image function handles this ^^
+		// '/\{\{(.*)\}\}/U'			=>	array("call" => "handleLinkMedia"),
 
 		// Inline code.
 		'/\'\'(.+)\'\'/U'			=>	array("rewrite" => '``\1``'),
@@ -129,16 +147,22 @@ class DokuWikiToMarkdown {
 				$line = "```";
 				$lineMode = "end_of_code";
 			}
-			else if ($lineMode == "text" && strlen($tl) > 0 &&
-				($tl[0] == "^")) {
+			else if ($lineMode == "text" && strlen($tl) > 0 && ($tl[0] == "^")) {
 				// first char is a ^ so its the start of a table. In table mode we
 				// just accumulate table rows in $table, and render when
 				// we switch out of table mode so we can do column widths right.
 				$lineMode = "table_head";
 				$table = array();
 			}
-			else if ($lineMode == "table_head" && strlen($tl) > 0 &&
-				($tl[0] == "|")) {
+			else if ($lineMode == "text" && strlen($tl) > 0 && substr_count($tl, "|") > 2) {
+				// alternative table opening - writer used | instead of ^ for header
+				// so we pretend that the correct ^ were used instead so that the code below handles it
+				$lineMode = "table_head";
+				$line = strtr($line, '|', '^');
+				$table = array();
+				echo "$line\n";
+			}
+			else if ($lineMode == "table_head" && strlen($tl) > 0 && ($tl[0] == "|")) {
 				// first char is a ^ so its the start of a table. In table mode we
 				// just accumulate table rows in $table, and render when
 				// we switch out of table mode so we can do column widths right.
@@ -424,18 +448,75 @@ class DokuWikiToMarkdown {
 		return $line;
 	}
 
+	function handleLinksAndImages($line, $matchArgs) {
+		foreach($matchArgs[0] as $match) {
+			$result = $matchArgs[1][0];
+			$descr = "";
+			$file = "";
+			$size = "";
+			$image_pfx = "";
+			$path_pfx = "/.attachments/";
+
+			$with_descr = array_filter(explode("|", $result), "test_null_or_empty");
+			if(count($with_descr) > 0)
+				$result = $with_descr[0];
+
+			if(count($with_descr) > 1)
+				$descr = $with_descr[1];
+
+			$with_size = array_filter(explode("?", $result), "test_null_or_empty");
+			if(count($with_size) > 0)
+				$result = $with_size[0];
+
+			if(count($with_size) > 1)
+				$size = " =" . trim($with_size[1]) . "x";
+			
+			$file = trim($result);
+			$file = str_replace(" ", "_", $file);
+			$descr = trim($descr);
+
+			if(strlen($descr) < 1)
+				$descr = $file;
+
+			$file_parts = pathinfo($file);
+
+			// figure out if this is an image or other media
+			switch($file_parts['extension'])
+			{
+			    case "jpg":
+			    case "jpeg":
+			    case "gif":
+			    case "png":
+			    case "bmp":
+			    	$image_pfx = "!";
+			    	break;
+			}
+
+			// figure out of this is external or internal content
+			if(substr($file, 0, 4) === 'http')
+				$path_pfx = "";
+
+			$replacement = "$image_pfx" . "[" . $descr . "](" . $path_pfx . $file . $size . ")";
+			$line = str_replace($match, $replacement, $line);
+		}
+
+		return $line;	
+	}
+
 	// Convert an internal docuwiki link, which is basically some combination
 	// of identifiers with ":" separators ("namespaces"), which are really
 	// folders. The input is any link. This only alters internal links.
 	function translateInternalLink($s) {
 		if (substr($s, 0, 5) == "http:" || substr($s, 0, 6) == "https") return $s;
-		if (strpos($s, ':') !== false) {
+		
+		//if (strpos($s, ':') !== false) {
 			$s = strtolower($s);
 			$s = str_replace("(", "", $s);
 			$s = str_replace(")", "", $s);
 			$s = str_replace(",", "", $s);
 			$s = strtr($s, " ", "_");
-		}
+		//}
+
 		return str_replace(":", "/", $s);
 	}
 
