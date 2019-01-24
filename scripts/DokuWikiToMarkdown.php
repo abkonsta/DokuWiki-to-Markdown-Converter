@@ -72,7 +72,7 @@ class DokuWikiToMarkdown {
 		'/\'\'(.+)\'\'/U'			=>	array("rewrite" => '``\1``'),
 
 		// Misc checks
-		'/^\d*\.\s/'				=>	array("notice" => "Possible numbered list item that is not docuwiki format, not handled"),
+		// '/^\d*\.\s/'				=>	array("notice" => "Possible numbered list item that is not docuwiki format, not handled"),
 		'/^=+\s*.*$/'				=>	array("notice" => "Line starts with an =. Possibly an untranslated heading. Check for = in the heading text"),
 		// <x@y.xom>						email
 
@@ -160,7 +160,6 @@ class DokuWikiToMarkdown {
 				$lineMode = "table_head";
 				$line = strtr($line, '|', '^');
 				$table = array();
-				echo "$line\n";
 			}
 			else if ($lineMode == "table_head" && strlen($tl) > 0 && ($tl[0] == "|")) {
 				// first char is a ^ so its the start of a table. In table mode we
@@ -357,8 +356,8 @@ class DokuWikiToMarkdown {
 		}
 		else if (substr($s, 0, 3) == "   ") {
 			$t = trim($s);
-			if ($t && ($t[0] == "*" || $t[0] == "-"))
-				$this->notice("Possible nested indent, which isn't handled");
+			//if ($t && ($t[0] == "*" || $t[0] == "-"))
+			//	$this->notice("Possible nested indent, which isn't handled");
 		}
 		else if (substr($s, 0, 2) == "  ") {
 			// we're a list, but this line is not the start of a point, so
@@ -398,6 +397,9 @@ class DokuWikiToMarkdown {
 			$link = substr($match, 2, -2);
 			$parts = explode("|", $link);
 
+			// trim spaces especially the leading spaces
+			$parts[0] = trim($parts[0]);
+
 			if ($media)
 				$media = "/media";
 			else
@@ -434,6 +436,8 @@ class DokuWikiToMarkdown {
 	// - {{http://something/file.png}}
 	// - {{http://something/file.png|display}}
 	// - {{tutorial:file.png}}
+	
+	/*
 	function handleImage($line, $matchArgs) {
 		foreach ($matchArgs[0] as $match) {
 			$link = substr($match, 2, -2);
@@ -447,6 +451,7 @@ class DokuWikiToMarkdown {
 
 		return $line;
 	}
+	*/
 
 	function handleLinksAndImages($line, $matchArgs) {
 		foreach($matchArgs[0] as $match) {
@@ -472,7 +477,10 @@ class DokuWikiToMarkdown {
 				$size = " =" . trim($with_size[1]) . "x";
 			
 			$file = trim($result);
-			$file = str_replace(" ", "_", $file);
+			$file = str_replace(" ", "_", $file); 
+			if($file[0] == ':')
+				$file = substr($file, 1);
+
 			$descr = trim($descr);
 
 			if(strlen($descr) < 1)
